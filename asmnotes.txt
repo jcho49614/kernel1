@@ -1,0 +1,114 @@
+NOTES FOR ASSEMBLY BASIC INSTRUCTIONS
+-------------------------------------------------------------
+-------------------------------------------------------------
+
+Registers (in order of 32/16/8 if applicable):
+
+eax/ax/al: general purpose, accumulator for math, syscalls
+ebx/bx/bl: general purpose, base pointer for memory
+ecx/cx/cl: loop counter (mov ecx, 5 runs loop 5 times), general purpose
+edx/dx/dl: I/O operations, general purpose
+esi/si: source index (strings, memory optimizations)
+edi/di: destination index
+esp, sp: stack pointers (used for the one stack in assembly code)
+ebp, bp: base pointer for stack frames
+
+-------------------------------------------------------------
+
+Moving instructions:
+
+Basic moving works in the following structure/format:
+mov (recipient), (wanted_value).
+
+
+For example, if we want to put the immediate integer "5" into eax, we would do:
+mov eax, 5.
+
+stored memory into register:
+mov eax, [0x1000]
+
+register values into newfound memory:
+mov [0x1000], eax
+
+if size is ambiguous, we will use:
+byte: for 1 byte operations
+word: for 2 byte operations
+dword: for 4 byte operations
+qword: for 8 byte operations
+
+-------------------------------------------------------------
+
+Arithmetic operations (mostly done in eax):
+add eax, 1      eax = eax+1
+sub eax, 1      eax = eax-1
+imul eax, 1     eax = eax * 1 (signed operations)
+xor eax, eax    excluded or. returns 1 if different, 0 if same, eax = 0.
+and eax, 0xFF   masking lower byte
+or eax, 0x100   set bits in register.
+
+-------------------------------------------------------------
+
+Stack operations:
+There is only one stack in the entire program. we initialize/allocate the stack values through:
+stack_space resb 0x____ (in our case, 0x1000 reserves 4kb for stack)
+
+Stacks operate on a LIFO (last in, first out) system. We can only "stack" (push) a value
+on the top of the stack, and only take out (pop) the top value of the stack.
+
+Every single time we stack something, the amount of memory available in the stack, stored in 
+esp, reduces. assume that esp is currently 0x8000.
+
+mov eax, 5      ;moves 5 to eax --> 4 bit signed integer
+push eax        ;eax is now in the a
+
+the output of esp will now be 0x7FFC, 4 bytes taken away.
+the following function 
+
+pop eax
+
+will not only put the stored top value of the stack into eax (in our case, 5),
+but also will return esp back to 0x8000, our intial allocated amount.
+
+this code:
+
+mov eax, 42
+add eax, 3      ; eax = 45
+push eax        ; push value of eax onto stack
+xor eax, eax    ; clear eax
+pop eax         ; pop value back into eax
+; eax = 45 again
+
+will
+
+1. put the value of 42 into eax,
+2. add 3 to eax making it 45,
+3. push eax into the stack
+4. intiialize eax (0)
+5. pop 45, back into eax.
+
+-------------------------------------------------------------
+
+Control flow, jumps, conditionals, flags, and loops:
+
+A flag can be represented as a "status" symbol. The most current process that affects flags,
+will in effect change the "eflags" register to the current process. the various flags are:
+(stars set for important ones)
+
+CF: Carry Flag (unsigned integer arithmetic overflow during add, sub) *
+PF: Parity Flag (least significant byte has even number of 1 bits)
+AF: Auxilary Flag (set if carry from lower nibble)
+ZF: Zero Flag (if resut is zero, used during compare, sub, etc) *
+SF: Sign Flag (if result is negative: sign bit is 0 or 1) *
+TF: Trap Flag (debugging)
+IF: Interrupt Flag (disables/enables hardware interrupts) 
+DF: direction flag (controls strings operations) 
+OF: Overflow flag (see if signed arithmetic overflow occurs, CF but signed) *
+
+Jumps are equivalent to "continue"s and "goto"s. if we set a function as jmp <label>,
+the code will always jump to label. Jumps can be conditional, too, such as:
+
+je/jz: zero flag = 1
+jne/jnz: zero flag = 0
+
+jl/jnge: jump if less (signed) --> SF is not OF
+jle/jng
