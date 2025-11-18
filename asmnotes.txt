@@ -1,5 +1,7 @@
+**************************************
 NOTES FOR ASSEMBLY BASIC INSTRUCTIONS
--------------------------------------------------------------
+**************************************
+
 -------------------------------------------------------------
 
 Registers (in order of 32/16/8 if applicable):
@@ -88,7 +90,7 @@ will
 
 -------------------------------------------------------------
 
-Control flow, jumps, conditionals, flags, and loops:
+Control flow - Flags
 
 A flag can be represented as a "status" symbol. The most current process that affects flags,
 will in effect change the "eflags" register to the current process. the various flags are:
@@ -104,11 +106,98 @@ IF: Interrupt Flag (disables/enables hardware interrupts)
 DF: direction flag (controls strings operations) 
 OF: Overflow flag (see if signed arithmetic overflow occurs, CF but signed) *
 
+-------------------------------------------------------------
+
+Control Flow - Jumps and Conditionals
+
 Jumps are equivalent to "continue"s and "goto"s. if we set a function as jmp <label>,
 the code will always jump to label. Jumps can be conditional, too, such as:
 
 je/jz: zero flag = 1
 jne/jnz: zero flag = 0
 
-jl/jnge: jump if less (signed) --> SF is not OF
-jle/jng
+jl(if less)/jnge(not greater or equal): jump if less (signed)
+jle(if less or equal)/jng(nt greater): jump if less or equal (signed)
+jg(greater)/jnle(not less or equal): jump if greater (signed)
+jge(greater than or equal)/jnl(not less): jump if greater of equal (signed)
+
+jb (if below)/jc (if carry): jump if below (unsigned)
+jbe (if below or equal)/jna (not above): jump if below or equal (unsigned)
+ja (if above)/jnbe (not below or equal): jump if above (unsigned)
+jae (if above or equal)/jnb (not below): jump if above or equal (unsign
+
+and so many more.
+
+Flags can be elicited through these following functions:
+
+(arithmetic)
+add: add – adds two values, sets CF, OF, SF, ZF, AF, PF – used for signed and unsigned addition
+adc: add with carry – adds two values + CF, sets CF, OF, SF, ZF, AF, PF – used for multi-precision addition
+sub: subtract – subtracts second operand from first, sets CF, OF, SF, ZF, AF, PF – used for signed and unsigned subtraction
+sbb: subtract with borrow – subtracts second operand + CF, sets CF, OF, SF, ZF, AF, PF – used for multi-precision subtraction
+inc: increment – adds 1 to operand, sets OF, SF, ZF, AF, PF – does not affect CF
+dec: decrement – subtracts 1 from operand, sets OF, SF, ZF, AF, PF – does not affect CF
+mul: multiply – multiplies operand(s), sets CF, OF – unsigned multiplication overflow
+imul: signed multiply – multiplies operand(s), sets CF, OF – signed multiplication overflow
+div: divide – divides, affects flags indirectly (CPU exceptions on divide by zero/overflow)
+idiv: signed divide – divides signed numbers, affects flags indirectly
+
+(logical/bitwise)
+and: bitwise AND – performs AND on operands, sets SF, ZF, PF – clears CF and OF
+or: bitwise OR – performs OR on operands, sets SF, ZF, PF – clears CF and OF
+xor: bitwise XOR – performs XOR on operands, sets SF, ZF, PF – clears CF and OF; common for zeroing registers
+not: bitwise NOT – inverts bits, does not affect flags
+shl: shift left – shifts bits left, sets CF, OF, SF, ZF, PF – used for multiplication by powers of 2
+shr: shift right – shifts bits right, sets CF, OF, SF, ZF, PF – logical shift (unsigned)
+sar: arithmetic shift right – shifts bits right preserving sign, sets CF, OF, SF, ZF, PF – signed shift
+rol: rotate left – rotates bits left through CF, sets CF, OF
+ror: rotate right – rotates bits right through CF, sets CF, OF
+rcl: rotate through carry left – rotates bits + CF, sets CF, OF
+rcr: rotate through carry right – rotates bits + CF, sets CF, OF
+
+(compare and test)
+cmp: compare – subtracts second operand from first, sets CF, OF, SF, ZF, AF, PF – does not change operands; used for conditional jumps
+test: test – bitwise AND of operands, sets SF, ZF, PF – does not change operands; used for checking bits
+
+(strings)
+scasb/scasw/scasd: scan string – compares accumulator with memory, sets SF, ZF, CF – used in loops/arrays
+cmpsb/cmpsw/cmpsd: compare string – compares memory operands, sets SF, ZF, CF – used for string comparison
+
+(control/flag specifc instructions)
+lahf: load AH from flags – stores SF, ZF, AF, PF, CF into AH – allows reading flags in C
+sahf: store AH into flags – loads SF, ZF, AF, PF, CF from AH – allows restoring flags
+pushf: push flags – pushes EFLAGS onto stack – useful to save flags
+popf: pop flags – pops EFLAGS from stack – restores flags
+stc: set carry flag – sets CF=1 – used for arithmetic or multi-precision
+clc: clear carry flag – sets CF=0 – used for arithmetic or multi-precision
+cmc: complement carry – inverts CF – used for arithmetic or multi-precision
+cld: clear direction flag – sets DF=0 – string operations auto-increment
+std: set direction flag – sets DF=1 – string operations auto-decrement
+cli: clear interrupt flag – disables hardware interrupts
+sti: set interrupt flag – enables hardware interrupts
+
+and much much more.
+
+-------------------------------------------------------------
+
+Control Flow - Loops
+
+with ecx as the primary loop counter, each loop subtracts ecx once and essentially keeps running
+until ecx runs out.
+
+Example:
+
+mov ecx, 5
+start_loop:
+    ;do something
+    loop start_loop     ;the use of the word "loop" leads to decrease of ecx.
+
+ecx = 0 leads to the stop of the loop.
+
+There are many forms of the loop:
+loop: decrement ecx, jump if ecx != 0 – basic counted loop; always jumps until ecx reaches 0
+loope (loop while equal)/loopz (loop while zero): decrement ecx, jump if ecx != 0 and ZF = 1 – loops while last comparison was equal
+loopne (loop while not equal)/loopnz (loop while not zero): decrement ecx, jump if ecx != 0 and ZF = 0 – loops while last comparison was not equal
+
+-------------------------------------------------------------
+
