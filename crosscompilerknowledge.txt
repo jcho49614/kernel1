@@ -1,0 +1,105 @@
+We are making a cross compiler.
+
+Our normal, conventional gcc, gdb, asm compilers target
+host OS, or in other words, Linux, Windows, MacOS, etc etc. However,
+since we are writing everything in our own kernel, we need a compiler
+that generates i686 (32bit) ELF binaries for kernel.
+
+-------------------------------------------------------------
+
+export PREFIX="$HOME/opt/cross"
+export TARGET=i686-elf
+export PATH="$PREFIX/bin:$PATH"
+
+PREFIX: where the cross-compiler and tools will be installed.
+TARGET: our targeted architecture and operating system
+EXPORT: add a $PREFIX/bin so our shell can find cross compiler tools.
+
+-------------------------------------------------------------
+
+Binutils: required from assembler, linker, and more.
+wget https://ftp.gnu.org/gnu/binutils/binutils-x.y.z.tar.gz
+
+GCC (compiler): provides GCC, G++, cross-compiling c, c++
+wget https://ftp.gnu.org/gnu/gcc/gcc-x.y.z.tar.gz
+
+GDB (debugger):
+wget https://ftp.gnu.org/gnu/gdb/gdb-x.y.z.tar.gz
+
+-------------------------------------------------------------
+
+building binutils:
+
+cd ~/src                            
+mkdir build-binutils                
+cd build-binutils
+
+../binutils-x.y.z/configure \
+  --target=$TARGET \
+  --prefix="$PREFIX" \
+  --with-sysroot \
+  --disable-nls \
+  --disable-werror
+
+make -j$(nproc)
+make install
+
+
+--target → specify target architecture
+
+--prefix → installation location ($PREFIX)
+
+--with-sysroot → configure for cross-compiling
+
+--disable-nls → no native language support (optional)
+
+--disable-werror → don’t treat warnings as errors
+
+-------------------------------------------------------------
+
+Building GCC
+
+mkdir build-gcc
+cd build-gcc
+
+../gcc-x.y.z/configure \
+  --target=$TARGET \
+  --prefix="$PREFIX" \
+  --disable-nls \
+  --enable-languages=c,c++ \
+  --without-headers \
+  --disable-hosted-libstdcxx
+
+make all-gcc -j$(nproc)
+make all-target-libgcc -j$(nproc)
+make install-gcc
+make install-target-libgcc
+
+
+--enable-languages=c,c++ → only build C/C++ frontends
+
+--without-headers → don’t require standard C library (bare metal)
+
+--disable-hosted-libstdcxx → skip standard C++ library (not usable yet)
+
+-------------------------------------------------------------
+
+Build GDB
+
+mkdir build-gdb
+cd build-gdb
+
+../gdb-x.y.z/configure \
+  --target=$TARGET \
+  --prefix="$PREFIX" \
+  --disable-werror
+
+make all-gdb -j$(nproc)
+make install-gdb
+
+-------------------------------------------------------------
+
+However, whenever building must use:
+export PREFIX="$HOME/opt/cross"
+export PATH="$PREFIX/bin:$PATH"
+so that the terminal can find the cross compiler.
