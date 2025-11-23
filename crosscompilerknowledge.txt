@@ -15,16 +15,21 @@ PREFIX: where the cross-compiler and tools will be installed.
 TARGET: our targeted architecture and operating system
 EXPORT: add a $PREFIX/bin so our shell can find cross compiler tools.
 
+UNNEEDED: MANUAL SETUP.
+
 -------------------------------------------------------------
 
 Binutils: required from assembler, linker, and more.
 wget https://ftp.gnu.org/gnu/binutils/binutils-x.y.z.tar.gz
+(download from website)
 
 GCC (compiler): provides GCC, G++, cross-compiling c, c++
 wget https://ftp.gnu.org/gnu/gcc/gcc-x.y.z.tar.gz
+(same)
 
 GDB (debugger):
 wget https://ftp.gnu.org/gnu/gdb/gdb-x.y.z.tar.gz
+(same)
 
 -------------------------------------------------------------
 
@@ -68,12 +73,11 @@ cd build-gcc
   --disable-nls \
   --enable-languages=c,c++ \
   --without-headers \
-  --disable-hosted-libstdcxx
 
 make all-gcc -j$(nproc)
-make all-target-libgcc -j$(nproc)
+
 make install-gcc
-make install-target-libgcc
+
 
 
 --enable-languages=c,c++ → only build C/C++ frontends
@@ -84,7 +88,7 @@ make install-target-libgcc
 
 -------------------------------------------------------------
 
-Build GDB
+Build GDB (otpional, for debugging)
 
 mkdir build-gdb
 cd build-gdb
@@ -98,8 +102,3 @@ make all-gdb -j$(nproc)
 make install-gdb
 
 -------------------------------------------------------------
-
-However, whenever building must use:
-export PREFIX="$HOME/opt/cross"
-export PATH="$PREFIX/bin:$PATH"
-so that the terminal can find the cross compiler.
