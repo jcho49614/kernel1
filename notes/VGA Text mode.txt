@@ -1,0 +1,54 @@
+VGA text mode directly reads character cells (an 80x25 grid) from a RAM region in 0xB8000.
+Hardware continually scans this specific memory and draws it on screen.
+
+with a width of 80 characters and a height of 25 rows, the total number of cells is 2000 cells
+Each cell contains a character code(ASCII) and an attribute byte (high and low nibble = background foreground)
+2000 cells x 2 bytes for attribute + character code = 4000 bytes for memory size.
+---------------------------------------------------------------------------------------------------
+each cell in memory is structured like the following:
+Byte 0: character(ASCII)
+Byte 1: attribute(color)
+eg: 0x48 0x1F is 'H' with color 0x1F
+---------------------------------------------------------------------------------------------------
+every row in a screen is 80 cells = 160 bytes (from 2 bytes of attribute + char)
+index of a cell is y * VGA_WIDTH = x (row * num of columns + x)
+memory_address of a cell is 0xB8000 + index * 2.
+---------------------------------------------------------------------------------------------------
+2 bytes can be replaced by a uint16_t. From barebones tutorial:
+
+uint16_t vga_entry(unsigned char uc, uint8_t color) {
+    return (uint16_t)uc | (uint16_t)color << 8;
+}
+
+lower 8 bits is character, upper 8 bits is color (bitwise shift << 8)
+--------------------------------------------------------------------------------------------------
+Code:
+
+#include <stdint.h> //for memorytypes
+
+#define VGA_MEMORY   0xB8000 //start of VGA memory address
+#define VGA_WIDTH    80      //20 columns
+
+// Pack char + color into a VGA cell
+static inline uint16_t vga_entry(char c, uint8_t color) {
+    return (uint16_t)c | ((uint16_t)color << 8);	//packing upper byte, lower byte color, character
+}
+
+void vga_print_at(int x, int y, const char* str, uint8_t color) {
+    volatile uint16_t* buffer = (uint16_t*)VGA_MEMORY; 
+
+//Buffer is defined as a pointer. It is now a variable that starts from 0xB8000 as a pointer and slowly increases in value using array syntax. (uint16_t*) turns number to address
+
+
+    int index = y * VGA_WIDTH + x;  // Convert x/y → linear index
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        buffer[index + i] = vga_entry(str[i], color); //call vga_entry, combine color and character, push it in the buffer.
+    }
+}
+
+THIS CODE:
+1. creates definitons for VGA_MEMORY, VGA_WIDTH
+2. creates function for combining char and attributes
+3. creates a buffer starting from 0xB8000 and so on
+4. outputs character by inputting values into the buffer.

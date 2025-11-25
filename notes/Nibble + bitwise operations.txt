@@ -1,0 +1,37 @@
+Nibbles
+
+A nibble is 4 bits. A byte is 8 bits.
+Each byte can be divided into the high nibble and the low nibble.
+(EG: 0xAE = A (1010) High niible, E(111) Low nibble)\
+
+using bitwise ops to extract high nibble and low nibble:
+
+EG: Byte = 0xAE.
+
+uint8_t high = (byte >> 4) & 0x0F;
+uint8_t low = (byte) & 0x0F;
+
+Byte = 1010 1110
+
+high:
+0000 1010 --> and 0x0F mask only keeps the lower nibble
+
+Low:
+1010 1110 --> 0x0F mask keeps lower nibble.
+
+Important for VGA text mode memory (nibble, background high, foreground low)
+-----------------------------------------------------------------------------
+FOR EXAMPLE:
+bg = 0011
+fg = 1100
+
+uint8_t attr = (bg << 4) | fg --> bitwise OR used to combine two nibbles into a byte:
+
+FOR BYTE 0011 1110:
+
+combine
+
+0011 0000
+0000 1110:
+----------
+0011 1110 (0x3E) --> raw values ALWAYS start in the lower nibble.
