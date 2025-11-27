@@ -17,9 +17,9 @@ forced to be within the first 8 KiB of the kernel file.
 
 .section .multiboot        # put following numbers in .multiboot. HEADER DATA
 .align 4                   # multiboot header needs to be aligned.
-.long MAGIC                # bootloader --> multiboot kernel recognition
-.long FLAGS                # flags value check --> what options I chose (alignment, memmap)
-.long CHECKSUM             # stores checksum.
+.long 0x1BADB002                # bootloader --> multiboot kernel recognition
+.long 0x3                # flags value check --> what options I chose (alignment, memmap)
+.long -(0x1BADB002+0x3)             # stores checksum.
 
 /*
 The multiboot standard does not define the value of the stack pointer register
@@ -47,10 +47,13 @@ doesn't make sense to return from this function as the bootloader is gone.
 */
 
 
-.section .text             # executable for cpu now.
-.global _start             # start of the cpu execution
+.section .text    # executable for cpu now.
+.global _start    # start of the cpu execution
 .type _start, @function    # _start is a function!
 _start:                    # First instruction of start
+
+
+
 
     /*
 	The bootloader has loaded us into 32-bit protected mode on a x86
@@ -111,6 +114,7 @@ _start:                    # First instruction of start
 	3) Jump to the hlt instruction if it ever wakes up due to a
 	   non-maskable interrupt occurring or due to system management mode.
 	*/
+
 
 cli                        # clear interrupt flag
 1: hlt                     # Halt CPU until next interrupt, jump back to label 1.

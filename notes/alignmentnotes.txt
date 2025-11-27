@@ -1,0 +1,20 @@
+Alignment --> address is a multiple of N.
+
+eg: 0x1000 is aligned to 16
+0x1003 is NOT aligned to 4.
+
+Alignment is crucial because:
+- CPUs cannot load misaligned data
+- If they can, they become slower and often won't work
+- CPUs fetch memory in 64 byte blocks, so if data crosses these boundaries I get additional load instructions
+- ABI (Application Binary Interface) rules exist (every platform has alignment rules) to call functions consistently and work stable.
+
+ALIGNMENT at 4 levels:
+1. CPU hardware alignment
+- Loads, stores, SIMD, Cache lines
+2. Compiler alignment
+- Struct layout, variable alignment, stack alignment
+3. Linker alignment
+- .text .data .bss, page alignment
+4., Filesystem/bootloader alignment
+- OS image must be aligned to sector boundaries
